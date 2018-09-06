@@ -49,10 +49,12 @@ loop()
 	if (n == 0)
 		return;
 	printf("Message: %x %x %x %x %x %x %x\n", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6]);
+	write(1, buffer, BUFSIZE);
 	struct message tmsg = buftmsg(buffer);
-	//msgdump(&tmsg);
+	msgdump(&tmsg);
 	struct message rmsg = handle(&tmsg);
 	unsigned char *rmsgbuf = msgtbuf(&rmsg);
+	write(1, rmsgbuf, BUFSIZE);
 	uint32_t rmsgsize = deuint32_t(rmsgbuf);
 	n = write(clsock, rmsgbuf, rmsgsize);
 	if (n < 0)

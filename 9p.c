@@ -21,13 +21,16 @@ msgtbuf(struct message *msg)
 		memcpy(buffer+4, &(msg->type), sizeof(msg->type));
 		memcpy(buffer+5, &(msg->tag), sizeof(msg->tag));
 		memcpy(buffer+7, &(msg->msize), sizeof(msg->msize));
-		memcpy(buffer+11, msg->version, sizeof(msg->version)-1);
+		*(buffer+11) = (uint16_t)strlen(msg->version);
+		memcpy(buffer+13, msg->version, sizeof(msg->version)-1);
 		return buffer;
 	case Rerror:
 		memcpy(buffer, &(msg->size), sizeof(msg->size));
 		memcpy(buffer+4, &(msg->type), sizeof(msg->type));
 		memcpy(buffer+5, &(msg->tag), sizeof(msg->tag));
-		memcpy(buffer+7, &(msg->ename), sizeof(msg->ename));
+		*(buffer+7) = (uint16_t)strlen(msg->ename);
+		memcpy(buffer+9, &(msg->ename), sizeof(msg->ename));
+		return buffer;
 	default:
 		return 0x0;
 	}
@@ -37,6 +40,8 @@ struct message
 buftmsg(unsigned char *buf)
 {
 	struct message template;
+	uint16_t strsize;
+	char *version;
 
 	template.size = deuint32_t(buf);
 	template.type = deuint8_t(buf+4);
@@ -44,10 +49,27 @@ buftmsg(unsigned char *buf)
 
 	switch (template.type) {
 	case Tversion:
+		template.msize = deuint32_t(buf+7);
+		strsize = deuint16_t(buf+11);
+		version = (char *)malloc(strsize+1);
+		if (version == 0x0) {
+			perror("Cannot allocate memory");
+			exit(1);
+		}
+		memcpy(version, buf+13, strsize);
+		*(version+strsize) = 0x0;
+		template.version = version;
+		break;
 	case Rversion:
 		template.msize = deuint32_t(buf+7);
-		char *version = malloc(template.size - 11);
-		memcpy(version, buf+11, template.size-11);
+		strsize = deuint16_t(buf+11);
+		version = (char *)malloc(strsize+1);
+		if (version == 0x0) {
+			perror("Cannot allocate memory");
+			exit(1);
+		}
+		memcpy(version, buf+13, strsize);
+		*(version+strsize) = 0x0;
 		template.version = version;
 		break;
 	default:
@@ -71,7 +93,7 @@ prepare_msg(struct message *msg)
 			msg->version = VERSION9P;
 		}
 		int length = strlen(msg->version);
-		msg->size = (length + 11)*sizeof(char);
+		msg->size = (length + 13)*sizeof(char);
 		break;
 	default:
 		return;
@@ -86,8 +108,19 @@ msgdump(struct message *msg)
 
 	switch (msg->type) {
 	case Tversion:
+		fprintf(stderr, "Package Information: %d (Tversion) \n"
+			"	Size: %u\n"
+			"	MSize: %u\n"
+			"	Tag: %u\n"
+			"	Version: %s\n",
+			msg->type,
+			msg->size,
+			msg->msize,
+			msg->tag,
+			msg->version);
+		break;
 	case Rversion:
-		fprintf(stderr, "Package Information: %d (T|Rversion)\n"
+		fprintf(stderr, "Package Information: %d (Rversion)\n"
 			"	Size: %u\n"
 			"	MSize: %u\n"
 			"	Tag: %u\n"
@@ -116,13 +149,23 @@ calc_size(struct message *msg)
 	switch (msg->type) {
 	case Tversion:
 	case Rversion:
-		return;
+		size = 4; // size-field
+		size += 1; // msgtype
+		size += 2; // tag
+		size += 4; // msize
+		size += 2; // size of string
+		size += strlen(msg->version);
+		break;
 	case Rerror:
 		size = 4; // size-field
+		size += 1; // msgtype
 		size += 2; // tag
-		size += sizeof(msg->ename)-1; // ename
-		return;
+		size += 2; // size of string-size
+		size += strlen(msg->ename)-1; // ename
+		break;
 	default:
 		return;
 	}
+
+	msg->size = size;
 }

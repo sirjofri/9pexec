@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,7 +16,7 @@ deuint32_t(unsigned char *buffer)
 	value |= buffer[1] << 16;
 	value |= buffer[2] << 8;
 	value |= buffer[3];
-	return value;
+	return ntohl(value);
 }
 
 uint16_t
@@ -24,7 +25,7 @@ deuint16_t(unsigned char *buffer)
 	uint16_t value = 0;
 	value |= buffer[0] << 8;
 	value |= buffer[1];
-	return value;
+	return ntohs(value);
 }
 
 uint8_t
