@@ -13,16 +13,21 @@ msgtbuf(struct message *msg)
 	if (msg == 0x0)
 		return 0x0;
 
+	buffer = malloc(msg->size);
 	switch (msg->type) {
 	case Tversion:
 	case Rversion:
-		buffer = malloc(msg->size);
 		memcpy(buffer, &(msg->size), sizeof(msg->size));
 		memcpy(buffer+4, &(msg->type), sizeof(msg->type));
 		memcpy(buffer+5, &(msg->tag), sizeof(msg->tag));
 		memcpy(buffer+7, &(msg->msize), sizeof(msg->msize));
-		memcpy(buffer+11, msg->version, (msg->size - 11)*sizeof(char));
+		memcpy(buffer+11, msg->version, sizeof(msg->version)-1);
 		return buffer;
+	case Rerror:
+		memcpy(buffer, &(msg->size), sizeof(msg->size));
+		memcpy(buffer+4, &(msg->type), sizeof(msg->type));
+		memcpy(buffer+5, &(msg->tag), sizeof(msg->tag));
+		memcpy(buffer+7, &(msg->ename), sizeof(msg->ename));
 	default:
 		return 0x0;
 	}
@@ -95,5 +100,29 @@ msgdump(struct message *msg)
 		break;
 	default:
 		fprintf(stderr, "unhandled: %d\n", msg->type);
+	}
+}
+
+void
+calc_size(struct message *msg)
+{
+	uint32_t size = 0;
+
+	if (msg == 0x0)
+		return;
+	if (msg->type < Tversion || msg->type >= Tmax)
+		return;
+
+	switch (msg->type) {
+	case Tversion:
+	case Rversion:
+		return;
+	case Rerror:
+		size = 4; // size-field
+		size += 2; // tag
+		size += sizeof(msg->ename)-1; // ename
+		return;
+	default:
+		return;
 	}
 }

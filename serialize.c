@@ -1,8 +1,15 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "serialize.h"
 
 uint32_t
 deuint32_t(unsigned char *buffer)
 {
+	if (buffer == 0x0) {
+		perror("Congratulations, you found a bug");
+		exit(1);
+	}
 	uint32_t value = 0;
 	value |= buffer[0] << 24;
 	value |= buffer[1] << 16;

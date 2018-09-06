@@ -4,6 +4,7 @@
 #define VERSION9P "9P2000"
 #define NOTAG 0
 #define NOFID (uint32_t)0
+#define MSIZE (1024)
 
 /* Protocol msgtypes */
 
@@ -40,37 +41,19 @@ enum msgtype {
 	Tmax,
 } msgtype;
 
-#ifdef INFORMATION_PLEASE_IGNORE
-#define  TVERSION  100
-#define  RVERSION  101
-#define  TAUTH     102
-#define  RAUTH     103
-#define  TATTACH   104
-#define  RATTACH   105
-#define  TERROR    106  /*  illegal  */
-#define  RERROR    107
-#define  TFLUSH    108
-#define  RFLUSH    109
-#define  TWALK     110
-#define  RWALK     111
-#define  TOPEN     112
-#define  ROPEN     113
-#define  TCREATE   114
-#define  RCREATE   115
-#define  TREAD     116
-#define  RREAD     117
-#define  TWRITE    118
-#define  RWRITE    119
-#define  TCLUNK    120
-#define  RCLUNK    121
-#define  TREMOVE   122
-#define  RREMOVE   123
-#define  TSTAT     124
-#define  RSTAT     125
-#define  TWSTAT    126
-#define  RWSTAT    127
-#define  TMAX      128
-#endif
+/* Error messages */
+#define Enomem    "out of memory"
+#define Eperm     "permission denied"
+#define Enodev    "no free devices"
+#define Ehungup   "write to hungup channel"
+#define Eexist    "file exists"
+#define Enonexist "file does not exist"
+#define Ebadcmd   "bad command"
+#define Ebadarg   "bad arg in system call"
+#define Enofid    "no such fid"
+#define Enotdir   "not a directory"
+#define Eopen     "already open"
+#define Ebadfid   "bad fid"
 
 /*
  * Protocol specification
@@ -369,3 +352,5 @@ void prepare_msg(struct message *msg);
 
 /* dump */
 void msgdump(struct message *msg);
+
+void calc_size(struct message *msg);

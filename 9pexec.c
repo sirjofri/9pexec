@@ -33,7 +33,7 @@ loop()
 		fprintf(stderr, "Congratulations, you found a bug! (need to srv_start first)\n");
 		exit(1);
 	}
-	memset(&buffer, 0, sizeof(buffer));
+	memset(buffer, 0, sizeof(buffer));
 	n = read(clsock, buffer, sizeof(uint32_t));
 	if (n < 0)
 		error("Error reading from socket");
@@ -50,7 +50,7 @@ loop()
 		return;
 	printf("Message: %x %x %x %x %x %x %x\n", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6]);
 	struct message tmsg = buftmsg(buffer);
-	msgdump(&tmsg);
+	//msgdump(&tmsg);
 	struct message rmsg = handle(&tmsg);
 	unsigned char *rmsgbuf = msgtbuf(&rmsg);
 	uint32_t rmsgsize = deuint32_t(rmsgbuf);
@@ -80,7 +80,7 @@ main(int argc, char **argv)
 	read(_stdout[0], readbuffer, sizeof(readbuffer));
 	printf("Received string: %s\n", readbuffer);
 
-	return 1; // debug, do not start network services
+	//return 1; // debug, do not start network services
 	clsock = srv_start(atoi(argv[1]));
 
 	loop();

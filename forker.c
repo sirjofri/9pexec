@@ -38,7 +38,7 @@ myfork(int *_in, int *_out, int *_err, int argc, char **argv)
 		}
 		args[argc] = 0x0;
 
-		execvp(args[0], args);
+		TRY(execvp(args[0], args), "Cannot exec");
 	} else {
 		// I am the parent
 		TRY(close(_in[0]), "Cannot close parent stdin");
