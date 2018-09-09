@@ -29,34 +29,44 @@ int _stderr[2];
 void
 loop()
 {
+	unsigned char *rmsgbuf;
+	uint32_t tmsgsize, bytes_left, rmsgsize;
+	struct message tmsg, rmsg;
+
 	if (clsock <= 0) {
 		fprintf(stderr, "Congratulations, you found a bug! (need to srv_start first)\n");
 		exit(1);
 	}
-	memset(buffer, 0, sizeof(buffer));
+	memset(buffer, 0, sizeof(buffer)); // neccessary?
 	n = read(clsock, buffer, sizeof(uint32_t));
 	if (n < 0)
 		error("Error reading from socket");
 	if (n == 0)
 		return;
-	uint32_t msgsize = deuint32_t(buffer);
-	if (msgsize == 0)
+	tmsgsize = deuint32_t(buffer);
+	if (tmsgsize == 0)
 		loop();
-	uint32_t bytes_left = msgsize - sizeof(uint32_t);
+	bytes_left = tmsgsize - sizeof(uint32_t);
 	n = read(clsock, buffer+sizeof(uint32_t), bytes_left);
 	if (n < 0)
 		error("Error reading from socket");
 	if (n == 0)
 		return;
-	printf("Message: %x %x %x %x %x %x %x\n", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6]);
-	write(1, buffer, BUFSIZE);
-	struct message tmsg = buftmsg(buffer);
+	tmsg = buftmsg(buffer);
+#ifdef DEBUG
+	write(1, buffer, BUFSIZE); //dump (BUFSIZE = alignment in hexdump)
 	msgdump(&tmsg);
-	struct message rmsg = handle(&tmsg);
-	unsigned char *rmsgbuf = msgtbuf(&rmsg);
-	write(1, rmsgbuf, BUFSIZE);
-	uint32_t rmsgsize = deuint32_t(rmsgbuf);
+#endif
+	rmsg = handle(&tmsg);
+	rmsgbuf = msgtbuf(&rmsg);
+	free_msg(&tmsg);
+	//free_msg(&rmsg); // somewhere here is a bug (why not with tmsg?)
+#ifdef DEBUG
+	write(1, rmsgbuf, BUFSIZE); //dump
+#endif
+	rmsgsize = deuint32_t(rmsgbuf);
 	n = write(clsock, rmsgbuf, rmsgsize);
+	free(rmsgbuf);
 	if (n < 0)
 		error("Error writing to socket");
 	loop();

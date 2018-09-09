@@ -4,7 +4,8 @@
 struct message
 handle(struct message *tmsg)
 {
-	struct message rmsg;
+	struct message rmsg = create_message();
+	uint32_t mode;
 
 	if (tmsg == 0x0) {
 		rmsg.type = Rerror;
@@ -20,6 +21,14 @@ handle(struct message *tmsg)
 		rmsg.tag = tmsg->tag;
 		rmsg.msize = MSIZE;
 		rmsg.version = VERSION9P;
+		break;
+	case Tattach:
+		rmsg.type = Rattach;
+		rmsg.tag = tmsg->tag;
+		rmsg.qid.version = 0x0;
+		rmsg.qid.path = 0x0;
+		mode = DMDIR;
+		rmsg.qid.type = mode;
 		break;
 	default:
 		rmsg.type = Rerror;

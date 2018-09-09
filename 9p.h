@@ -55,13 +55,17 @@ enum msgtype {
 #define Eopen     "already open"
 #define Ebadfid   "bad fid"
 
-/*
- * Protocol specification
- */
+/* File mode */
+#define DMDIR     0x80000000 // directory
+#define DMAPPEND  0x40000000 // append only
+#define DMEXCL    0x20000000 // exclusive user
+#define DMTMP     0x04000000 // temporary
+
+/* Protocol specification */
 
 /* generic qid */
 typedef struct Qid {
-	char type; // type of file
+	uint8_t type; // type of file
 	uint32_t version; // increment after modification
 	uint64_t path; // unique path in the hierarchy
 } Qid;
@@ -79,32 +83,32 @@ struct message {
 	char *uname;
 	char *aname;
 	/* rauth */
-	char aquid[13];
+	Qid aqid;
 	/* rerror */
 	char *ename;
 	/* tflush */
-	char oldtag[2];
+	uint16_t oldtag;
 	/* tattach */
 	uint32_t fid;
 	/* rattach */
 	Qid qid;
 	/* twalk */
 	uint32_t newfid;
-	char nwname[2];
+	uint16_t nwname;
 	char **wname; /* nwname * ( char *wname ) */
 	/* rwalk */
-	char nwqid[2];
-	char *wqid[13]; /* nwqid * ( char *wqid ) */
+	uint16_t nwqid;
+	Qid *wqid; /* nwqid * ( char *wqid ) */
 	/* topen */
 	char mode;
 	/* ropen */
-	char iounit[4];
+	uint32_t iounit;
 	/* tcreate */
 	char *name;
-	char perm[4];
+	uint32_t perm;
 	/* tread */
-	char offset[8];
-	char count[4];
+	uint64_t offset;
+	uint32_t count;
 	/* rread */
 	char *data; // length: count
 	/* rstat */
@@ -354,3 +358,8 @@ void prepare_msg(struct message *msg);
 void msgdump(struct message *msg);
 
 void calc_size(struct message *msg);
+
+/* use this instead of free(msg); */
+void free_msg(struct message *msg);
+
+struct message create_message();
