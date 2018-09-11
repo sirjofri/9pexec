@@ -62,6 +62,7 @@ loop()
 	free_msg(&tmsg);
 	//free_msg(&rmsg); // somewhere here is a bug (why not with tmsg?)
 #ifdef DEBUG
+	msgdump(&rmsg);
 	write(1, rmsgbuf, BUFSIZE); //dump
 #endif
 	rmsgsize = deuint32_t(rmsgbuf);

@@ -27,8 +27,16 @@ handle(struct message *tmsg)
 		rmsg.tag = tmsg->tag;
 		rmsg.qid.version = 0x0;
 		rmsg.qid.path = 0x0;
-		mode = DMDIR;
+		mode = DMDIR >> 24;
 		rmsg.qid.type = mode;
+		break;
+	case Tclunk:
+		rmsg.type = Rclunk;
+		rmsg.tag = tmsg->tag;
+		break;
+	case Tflush:
+		rmsg.type = Rflush;
+		rmsg.tag = tmsg->tag;
 		break;
 	default:
 		rmsg.type = Rerror;

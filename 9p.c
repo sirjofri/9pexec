@@ -74,6 +74,9 @@ msgtbuf(struct message *msg)
 	case Rattach:
 		writeqid(buffer+7, &(msg->qid));
 		return buffer;
+	case Rclunk:
+	case Rflush:
+		return buffer;
 	default:
 		return 0x0;
 	}
@@ -99,6 +102,12 @@ buftmsg(unsigned char *buf)
 		template.afid = deuint32_t(buf+11);
 		template.uname = readstr(buf+15);
 		template.aname = readstr(buf+17+strlen(template.uname));
+		break;
+	case Tclunk:
+		template.fid = deuint32_t(buf+7);
+		break;
+	case Tflush:
+		template.oldtag = deuint16_t(buf+7);
 		break;
 	default:
 		break;
@@ -174,6 +183,66 @@ msgdump(struct message *msg)
 			msg->uname,
 			msg->aname);
 		break;
+	case Rattach:
+		fprintf(stderr, "Package Information: %d (Rattach)\n"
+			"	Size: %u\n"
+			"	Tag: %u\n"
+			"	qid-type: %x\n"
+			"	qid-version: %u\n"
+			"	qid-path: %lu\n",
+			msg->type,
+			msg->size,
+			msg->tag,
+			msg->qid.type,
+			msg->qid.version,
+			msg->qid.path);
+		break;
+	case Tclunk:
+		fprintf(stderr, "Package Information: %d (Tclunk)\n"
+			"	Size: %u\n"
+			"	Tag: %u\n"
+			"	Fid: %u\n",
+			msg->type,
+			msg->size,
+			msg->tag,
+			msg->fid);
+		break;
+	case Rclunk:
+		fprintf(stderr, "Package Information: %d (Rclunk)\n"
+			"	Size: %u\n"
+			"	Tag: %u\n",
+			msg->type,
+			msg->size,
+			msg->tag);
+		break;
+	case Rerror:
+		fprintf(stderr, "Package Information: %d (Rerror)\n"
+			"	Size: %u\n"
+			"	Tag: %u\n"
+			"	Ename: %s\n",
+			msg->type,
+			msg->size,
+			msg->tag,
+			msg->ename);
+		break;
+	case Tflush:
+		fprintf(stderr, "Package Information: %d (Tflush)\n"
+			"	Size: %u\n"
+			"	Tag: %u\n"
+			"	Oldtag: %u\n",
+			msg->type,
+			msg->size,
+			msg->tag,
+			msg->oldtag);
+		break;
+	case Rflush:
+		fprintf(stderr, "Package Information: %d (Rflush)\n"
+			"	Size: %u\n"
+			"	Tag: %u\n",
+			msg->type,
+			msg->size,
+			msg->tag);
+		break;
 	default:
 		fprintf(stderr, "unhandled: %d\n", msg->type);
 	}
@@ -211,8 +280,14 @@ calc_size(struct message *msg)
 	case Rattach:
 		size += 13; // aqid
 		break;
+	case Tclunk:
+		size += 4; // fid
+		break;
+	case Tflush:
+		size += 2; // oldtag
+		break;
 	default:
-		return;
+		break;
 	}
 
 	msg->size = size;
